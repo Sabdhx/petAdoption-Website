@@ -1,4 +1,5 @@
 // const Pet = require('../models/Pet');
+import admin from "../models/admin.js";
 import Pet from "../models/Pet.js";
 
 export const getPets = async (req, res) => {
@@ -23,23 +24,34 @@ export const getPetById = async (req, res) => {
 };
 
 export const createPet = async (req, res) => {
-  const { name, breed, age, description, image, adoptionStatus } = req.body;
+  const { name, breed, age, description, image, adoptionStatus,contact, adminEmail } = req.body;
 
   try {
-    const pet = new Pet({ name, breed, age, description, image, adoptionStatus });
-    await pet.save();
-    res.status(201).json(pet);
+    const admin = await admin.findOne({ email: adminEmail });
+    console.log(admin)
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    const pendingPost = { name, breed, age, description, image,contact, adoptionStatus };
+
+    // Add post to admin's pendingPosts
+    admin.pendingPosts.push(pendingPost);
+
+    await admin.save();
+
+    res.status(201).json({ message: 'Post sent to admin for approval' });
   } catch (err) {
-    res.status(500).json({ message: 'Error creating pet' });
+    res.status(500).json(err.message);
   }
-};
+}
 
 export const updatePet = async (req, res) => {
   try {
     const pet = await Pet.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(pet);
   } catch (err) {
-    res.status(500).json({ message: 'Error updating pet' });
+    res.status(500).json(err.message);
   }
 };
 

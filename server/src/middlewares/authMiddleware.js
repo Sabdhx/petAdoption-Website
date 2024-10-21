@@ -1,9 +1,8 @@
-// const jwt = require('jsonwebtoken');
 import jwt from 'jsonwebtoken'
 
 export const protect = (req, res, next) => {
-  let token = req.headers.authorization;
-
+  let token = req.cookies.token;
+  console.log(token)
   if (token && token.startsWith('Bearer')) {
     token = token.split(' ')[1];
   }

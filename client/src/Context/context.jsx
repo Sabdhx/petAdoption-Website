@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 export const PetsContext = createContext();
 
 export const PetsProvider = ({ children }) => {
-  const [user , setUser ] = useState(null)
+  const [user,setUser] = useState()
   const [pets, setPets] = useState([
     {
       id: 1,
@@ -59,16 +59,37 @@ export const PetsProvider = ({ children }) => {
   ]);
 
   useEffect(() => {
-    const fetchCookies = async () => {
-   
-        localStorage.setItem("user", JSON.stringify(user));
-     
-      console.log(user)
-    };
-    fetchCookies();
-  }, [user]);
+    const token = Cookies.get('token'); // Ensure 'token' matches the cookie name
 
+    if (token) {
+      console.log("Token:", token); // This should log the token
 
+      // Function to decode a Base64Url encoded string
+      const base64UrlDecode = (base64Url) => {
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Replace characters
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      };
+
+      // Split the token into its parts
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const decodedPayload = base64UrlDecode(parts[1]); // Decode the payload
+        setUser(decodedPayload);
+        console.log(user)
+        console.log("Decoded Payload:", decodedPayload); // Log the decoded payload
+
+        // You can set the user state or perform any action with the decoded payload
+        // setUser(decodedPayload); // If you have a state to store the user info
+      } else {
+        console.error("Invalid JWT structure");
+      }
+    } else {
+      console.log("No token found"); // Log if no token is found
+    }
+  }, []);
 
   // Function to add a new pet
   const addPet = (newPet) => {
